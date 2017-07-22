@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"path"
 	"strconv"
@@ -79,8 +80,6 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 		}
 		defer in.Close()
 
-		log.Println("uploading", handler.Filename)
-
 		d, err := time.ParseDuration(fmt.Sprintf("%dh", duration))
 		if err != nil {
 			log.Printf("parse duration: %v", err)
@@ -88,7 +87,15 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		from, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil {
+			log.Printf("split: %v", err)
+			w.Header().Set("Content-Type", "text/html")
+			return
+		}
+
 		md := &MetaData{
+			From:     from,
 			Filename: handler.Filename,
 			Created:  time.Now(),
 			Expire:   time.Now().Add(d),
@@ -111,6 +118,8 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "text/html")
 			return
 		}
+
+		log.Printf("uploaded %s as %s", md.Filename, md.Hash)
 
 		t, err := template.New("reply").Parse(replypage)
 		if err != nil {

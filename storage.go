@@ -15,6 +15,7 @@ import (
 )
 
 type MetaData struct {
+	From     string // IP address of requestor
 	Filename string
 	Hash     string
 	Created  time.Time
