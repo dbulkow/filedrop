@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"time"
 )
@@ -15,9 +16,17 @@ func status(w http.ResponseWriter, r *http.Request) {
 
 	now := time.Now()
 
+	from, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		log.Printf("split: %v", err)
+		w.Header().Set("Content-Type", "text/html")
+		return
+	}
+
 	for _, md := range storage.Files {
-		if md.Expire.After(now) {
-			fmt.Fprintf(w, "%s %s %s\n", md.Hash, md.Expire.Sub(now), md.Filename)
+		if md.From == from && md.Expire.After(now) {
+			rem := md.Expire.Sub(now)
+			fmt.Fprintf(w, "%s %v %s\n", md.Hash, rem-(rem%time.Minute), md.Filename)
 		}
 	}
 }
