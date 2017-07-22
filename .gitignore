@@ -1,3 +1,6 @@
 filedrop
 tls
 *~
+# generated files
+frontpage_html.go
+replypage_html.go
