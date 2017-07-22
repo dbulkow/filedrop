@@ -77,6 +77,8 @@ func NewStorage(root string) *Storage {
 		log.Fatalf("walk: %v", err)
 	}
 
+	go s.Expire()
+
 	return s
 }
 
@@ -101,4 +103,25 @@ func (s *Storage) Create(md *MetaData) (io.WriteCloser, error) {
 	s.Files[md.Hash] = md
 
 	return os.Create(path.Join(s.Root, md.Hash, md.Filename))
+}
+
+func (s *Storage) Expire() {
+	for {
+		time.Sleep(time.Minute)
+
+		s.Lock()
+
+		now := time.Now()
+		for _, md := range s.Files {
+			if now.After(md.Expire) {
+				log.Printf("expire %s\n", md.Hash)
+				if err := os.RemoveAll(path.Join(s.Root, md.Hash)); err != nil {
+					log.Printf("remove %s: %v", md.Hash, err)
+				}
+				delete(s.Files, md.Hash)
+			}
+		}
+
+		s.Unlock()
+	}
 }
