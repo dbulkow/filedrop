@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"time"
 )
 
@@ -38,6 +39,7 @@ func (m *MetaData) Bytes() []byte {
 type Storage struct {
 	Root  string
 	Files map[string]*MetaData
+	sync.Mutex
 }
 
 func NewStorage(root string) *Storage {

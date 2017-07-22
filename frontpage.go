@@ -21,6 +21,9 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	storage.Lock()
+	defer storage.Unlock()
+
 	switch r.Method {
 	case http.MethodGet:
 		if r.URL.Path != "" {

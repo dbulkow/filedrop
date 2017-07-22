@@ -8,6 +8,9 @@ import (
 )
 
 func status(w http.ResponseWriter, r *http.Request) {
+	storage.Lock()
+	defer storage.Unlock()
+
 	log.Printf("serving status to %s", r.RemoteAddr)
 
 	now := time.Now()
