@@ -14,7 +14,7 @@ func TestMkhash(t *testing.T) {
 		Expire:   time.Date(2001, 7, 10, 1, 15, 0, 0, time.UTC),
 	}
 
-	md.mkhash()
+	md.MkHash()
 
 	if md.Hash != hash {
 		t.Fatalf("Expected hash %s got %s\n", hash, md.Hash)
