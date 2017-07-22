@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"time"
 
@@ -62,11 +63,14 @@ func (m *MetaData) Notify() {
 	// use smtp to provide html mail with link to server
 }
 
-func (m *MetaData) Expire() {
+func (m *MetaData) doExpire() {
 	if time.Now().After(m.Expire) {
 		// remove hashdir
 	}
 }
 
 func (m *MetaData) mkhash() {
+	data := []byte(fmt.Sprintf("%s %s %s", m.Filename, m.Created, m.Expire))
+	sum := sha256.Sum256(data)
+	m.Hash = fmt.Sprintf("%x", sum)
 }
