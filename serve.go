@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -15,6 +16,8 @@ const (
 	DefaultCert   = "tls/cert.pem"
 	DefaultKey    = "tls/key.pem"
 )
+
+var url string
 
 func init() {
 	var (
@@ -40,6 +43,12 @@ func init() {
 		key = DefaultKey
 	}
 
+	url = os.Getenv("FILEDROP_SERVER_URL")
+
+	if url == "" {
+		url = fmt.Sprintf("https://%s:%s", listen, port)
+	}
+
 	serveCmd := &cobra.Command{
 		Use:   "serve",
 		Short: "Start an https server",
@@ -51,6 +60,7 @@ func init() {
 	serveCmd.Flags().StringVarP(&port, "port", "p", port, "Port number")
 	serveCmd.Flags().StringVarP(&cert, "cert", "c", cert, "TLS cert file")
 	serveCmd.Flags().StringVarP(&key, "key", "k", key, "TLS key file")
+	serveCmd.Flags().StringVarP(&url, "url", "u", url, "Filedrop server URL to advertise")
 
 	RootCmd.AddCommand(serveCmd)
 }
@@ -60,7 +70,7 @@ func serve(cmd *cobra.Command, args []string) {
 	port := cmd.Flag("port").Value.String()
 
 	mux := http.NewServeMux()
-	mux.Handle("/", makeGzipHandler(frontPage))
+	mux.Handle("/", http.StripPrefix("/", makeGzipHandler(frontPage)))
 	mux.HandleFunc("/status", status)
 	mux.Handle("/metrics", metrics())
 

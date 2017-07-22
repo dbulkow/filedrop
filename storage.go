@@ -2,31 +2,22 @@ package main
 
 import (
 	"crypto/sha256"
+	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 )
 
 type MetaData struct {
-	Filename  string
-	Hash      string
-	Created   time.Time
-	Expire    time.Time
-	OwnerMail string
-	MailAddrs []string
-}
-
-func (m *MetaData) Notify() {
-	// iterate over MailAddrs
-	// use smtp to provide html mail with link to server
-}
-
-func (m *MetaData) DoExpire() {
-	if time.Now().After(m.Expire) {
-		// remove hashdir
-	}
+	Filename string
+	Hash     string
+	Created  time.Time
+	Expire   time.Time
 }
 
 func (m *MetaData) MkHash() {
@@ -36,7 +27,12 @@ func (m *MetaData) MkHash() {
 }
 
 func (m *MetaData) Bytes() []byte {
-	return []byte(fmt.Sprintf("%s\n%s\n%s\n%s\n%s\n%s\n", m.Filename, m.Hash, m.Created, m.Expire, m.OwnerMail, m.MailAddrs))
+	b, err := json.MarshalIndent(m, "", "    ")
+	if err != nil {
+		log.Fatalf("marshal: %v", err)
+	}
+
+	return b
 }
 
 type Storage struct {
@@ -44,25 +40,62 @@ type Storage struct {
 	Files map[string]*MetaData
 }
 
+func NewStorage(root string) *Storage {
+	s := &Storage{Root: root}
+
+	s.Files = make(map[string]*MetaData)
+
+	visit := func(pathname string, fi os.FileInfo, err error) error {
+		if path.Base(pathname) != "metadata" {
+			return nil
+		}
+
+		log.Printf("Loading %s\n", pathname)
+
+		f, err := os.Open(pathname)
+		if err != nil {
+			return fmt.Errorf("metadata open: %v", err)
+		}
+		defer f.Close()
+
+		md := &MetaData{}
+
+		if err := json.NewDecoder(f).Decode(md); err != nil {
+			return fmt.Errorf("metadata decode: %v", err)
+		}
+
+		hash := path.Base(path.Dir(pathname))
+		s.Files[hash] = md
+
+		return nil
+	}
+
+	if err := filepath.Walk(s.Root, visit); err != nil {
+		log.Fatalf("walk: %v", err)
+	}
+
+	return s
+}
+
 /*
-.../storage/<hash of filename, time posted>/file
-                                           /metadata
+.../storage.Root/<hash of filename, time posted>/file
+                                                /metadata
 */
 
-func (s *Storage) Create(md *MetaData) error {
+func (s *Storage) Create(md *MetaData) (io.WriteCloser, error) {
 	md.MkHash()
 
-	err := os.MkdirAll(path.Join(s.Root, md.Hash, md.Filename), 0755)
+	err := os.MkdirAll(path.Join(s.Root, md.Hash), 0755)
 	if err != nil {
-		return fmt.Errorf("mkdir: %v", err)
+		return nil, fmt.Errorf("mkdir: %v", err)
 	}
 
 	err = ioutil.WriteFile(path.Join(s.Root, md.Hash, "metadata"), md.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("create metadata: %v", err)
+		return nil, fmt.Errorf("create metadata: %v", err)
 	}
 
 	s.Files[md.Hash] = md
 
-	return nil
+	return os.Create(path.Join(s.Root, md.Hash, md.Filename))
 }
