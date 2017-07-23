@@ -69,6 +69,7 @@ func NewStorage(root string) *Storage {
 
 		hash := path.Base(path.Dir(pathname))
 		s.Files[hash] = md
+		activeFiles.Inc()
 
 		return nil
 	}
