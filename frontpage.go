@@ -18,6 +18,7 @@ import (
 func frontPage(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "favicon.ico" {
 		log.Printf("serving favicon to %s", r.RemoteAddr)
+		serveFavIcon.Inc()
 		http.ServeFile(w, r, "favicon.png")
 		return
 	}
@@ -37,12 +38,17 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			w.Header().Set("Content-Disposition", fmt.Sprintf("filename=\"%s\"", md.Filename))
-			http.ServeFile(w, r, path.Join(storage.Root, r.URL.Path, md.Filename))
+			downloads.Inc()
+			writer := NewResponseWriterCounter(w)
+
+			writer.Header().Set("Content-Disposition", fmt.Sprintf("filename=\"%s\"", md.Filename))
+			http.ServeFile(writer, r, path.Join(storage.Root, r.URL.Path, md.Filename))
 			return
 		}
 
 		log.Printf("serving form to %s", r.RemoteAddr)
+
+		serveFrontPage.Inc()
 
 		w.Header().Set("Etag", fmt.Sprintf("\"%s\"", replypage_etag))
 		w.Header().Set("Content-Type", "text/html")
@@ -113,13 +119,17 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 			}
 		}()
 
-		if _, err := io.Copy(out, in); err != nil {
+		nbytes, err := io.Copy(out, in)
+		if err != nil {
 			log.Printf("copy: %v", err)
 			w.Header().Set("Content-Type", "text/html")
 			return
 		}
 
-		log.Printf("uploaded %s as %s", md.Filename, md.Hash)
+		uploads.Inc()
+		uploadBytes.Add(float64(nbytes))
+
+		log.Printf("uploaded %d bytes for %s as %s", nbytes, md.Filename, md.Hash)
 
 		t, err := template.New("reply").Parse(replypage)
 		if err != nil {
