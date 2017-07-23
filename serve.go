@@ -11,10 +11,8 @@ import (
 )
 
 const (
-	DefaultPort   = "8433"
+	DefaultPort   = "8080"
 	DefaultListen = "127.0.0.1"
-	DefaultCert   = "tls/cert.pem"
-	DefaultKey    = "tls/key.pem"
 )
 
 var url string
@@ -23,8 +21,6 @@ func init() {
 	var (
 		listen = os.Getenv("FILEDROP_ADDRESS")
 		port   = os.Getenv("FILEDROP_PORT")
-		cert   = os.Getenv("FILEDROP_CERT")
-		key    = os.Getenv("FILEDROP_KEY")
 	)
 
 	if listen == "" {
@@ -33,14 +29,6 @@ func init() {
 
 	if port == "" {
 		port = DefaultPort
-	}
-
-	if cert == "" {
-		cert = DefaultCert
-	}
-
-	if key == "" {
-		key = DefaultKey
 	}
 
 	url = os.Getenv("FILEDROP_SERVER_URL")
@@ -58,8 +46,6 @@ func init() {
 
 	serveCmd.Flags().StringVarP(&listen, "listen", "l", listen, "Listen address")
 	serveCmd.Flags().StringVarP(&port, "port", "p", port, "Port number")
-	serveCmd.Flags().StringVarP(&cert, "cert", "c", cert, "TLS cert file")
-	serveCmd.Flags().StringVarP(&key, "key", "k", key, "TLS key file")
 	serveCmd.Flags().StringVarP(&url, "url", "u", url, "Filedrop server URL to advertise")
 
 	RootCmd.AddCommand(serveCmd)
@@ -83,7 +69,7 @@ func serve(cmd *cobra.Command, args []string) {
 		TLSNextProto:   nil,
 	}
 
-	log.Printf("Listening on https://%s\n", srv.Addr)
+	log.Printf("Listening on http://%s\n", srv.Addr)
 
-	log.Fatal(srv.ListenAndServeTLS("tls/cert.pem", "tls/key.pem"))
+	log.Fatal(srv.ListenAndServe())
 }
