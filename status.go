@@ -24,7 +24,7 @@ func status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, md := range storage.Files {
-		if md.From == from && md.Expire.After(now) {
+		if md.From == from {
 			rem := md.Expire.Sub(now)
 			fmt.Fprintf(w, "%s %v %s\n", md.Hash, rem-(rem%time.Minute), md.Filename)
 		}
