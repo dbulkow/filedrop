@@ -47,7 +47,7 @@ func main() {
 	}
 
 	if url == "" {
-		url = fmt.Sprintf("https://%s:%s", listen, port)
+		url = fmt.Sprintf("http://%s:%s", listen, port)
 	}
 
 	if root == "" {
