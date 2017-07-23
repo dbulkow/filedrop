@@ -15,7 +15,7 @@ import (
 )
 
 type MetaData struct {
-	From     string // IP address of requestor
+	From     string // IP address of uploader
 	Filename string
 	Hash     string
 	Created  time.Time
@@ -101,6 +101,7 @@ func (s *Storage) Create(md *MetaData) (io.WriteCloser, error) {
 	}
 
 	s.Files[md.Hash] = md
+	activeFiles.Inc()
 
 	return os.Create(path.Join(s.Root, md.Hash, md.Filename))
 }
@@ -119,6 +120,7 @@ func (s *Storage) Expire() {
 					log.Printf("remove %s: %v", md.Hash, err)
 				}
 				delete(s.Files, md.Hash)
+				activeFiles.Dec()
 			}
 		}
 

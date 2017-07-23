@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 )
@@ -63,9 +64,9 @@ func main() {
 	storage = NewStorage(root)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", http.StripPrefix("/", makeGzipHandler(frontPage)))
-	mux.HandleFunc("/status", status)
-	mux.Handle("/metrics", metrics())
+	mux.Handle("/", prometheus.InstrumentHandler("server", http.StripPrefix("/", makeGzipHandler(frontPage))))
+	mux.Handle("/status", prometheus.InstrumentHandlerFunc("status", status))
+	mux.Handle("/metrics", prometheus.InstrumentHandler("metrics", metrics()))
 
 	srv := &http.Server{
 		Addr:           listen + ":" + port,
