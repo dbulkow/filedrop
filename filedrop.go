@@ -45,9 +45,9 @@ func main() {
 		port = DefaultPort
 	}
 
+	hostname, _ := os.Hostname()
 	if url == "" {
-		url = fmt.Sprintf("http://%s:%s", listen, port)
-	}
+		url = fmt.Sprintf("http://%s:%s", hostname, port)
 	}
 
 	flag.StringVarP(&root, "root", "r", root, "Storage directory")
@@ -73,7 +73,8 @@ func main() {
 		TLSNextProto:   nil,
 	}
 
-	log.Printf("Listening on http://%s\n", srv.Addr)
+	log.Printf("Advertising url \"%s\"", url)
+	log.Printf("Listening on http://%s", srv.Addr)
 
 	log.Fatal(srv.ListenAndServe())
 }
