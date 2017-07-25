@@ -100,20 +100,22 @@ func NewStorage(root string) *Storage {
 func (s *Storage) Create(md *MetaData) (io.WriteCloser, error) {
 	md.MkHash()
 
-	err := os.MkdirAll(path.Join(s.Root, md.Hash), 0755)
+	hashdir := path.Join(s.Root, md.Hash)
+
+	err := os.MkdirAll(hashdir, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("mkdir: %v", err)
 	}
 
-	err = ioutil.WriteFile(path.Join(s.Root, md.Hash, "metadata"), md.Bytes(), 0644)
+	err = ioutil.WriteFile(path.Join(hashdir, "metadata"), md.Bytes(), 0644)
 	if err != nil {
-		return nil, fmt.Errorf("create metadata: %v", err)
+		return nil, fmt.Errorf("create metadata %s: %v", hashdir, err)
 	}
 
 	s.Files[md.Hash] = md
 	activeFiles.Inc()
 
-	return os.Create(path.Join(s.Root, md.Hash, md.Filename))
+	return os.Create(path.Join(hashdir, md.Filename))
 }
 
 func (s *Storage) Expire() {
@@ -126,8 +128,9 @@ func (s *Storage) Expire() {
 		for _, md := range s.Files {
 			if now.After(md.Expire) {
 				log.Printf("expire %s\n", md.Hash)
-				if err := os.RemoveAll(path.Join(s.Root, md.Hash)); err != nil {
-					log.Printf("remove %s: %v", md.Hash, err)
+				hashdir := path.Join(s.Root, md.Hash)
+				if err := os.RemoveAll(hashdir); err != nil {
+					log.Printf("remove %s: %v", hashdir, err)
 				}
 				delete(s.Files, md.Hash)
 				activeFiles.Dec()
