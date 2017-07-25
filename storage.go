@@ -23,12 +23,12 @@ const (
 )
 
 type MetaData struct {
-	Type     StorageType
-	From     string // IP address of uploader
-	Filename string
-	Hash     string
-	Created  time.Time
-	Expire   time.Time
+	Type     StorageType `json:"type"`
+	From     string      `json:"from"` // IP address of uploader
+	Filename string      `json:"filename"`
+	Hash     string      `json:"hash"`
+	Created  time.Time   `json:"created"`
+	Expire   time.Time   `json:"expire"`
 }
 
 func (m *MetaData) MkHash() {
