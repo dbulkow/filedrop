@@ -61,7 +61,7 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", prometheus.InstrumentHandler("server", http.StripPrefix("/", makeGzipHandler(frontPage))))
-	mux.Handle("/status", prometheus.InstrumentHandlerFunc("status", status))
+	mux.Handle("/status", prometheus.InstrumentHandler("status", makeGzipHandler(status)))
 	mux.Handle("/metrics", prometheus.InstrumentHandler("metrics", metrics()))
 
 	srv := &http.Server{

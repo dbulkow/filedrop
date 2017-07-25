@@ -23,6 +23,8 @@ func status(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Set("Content-Type", "text/plain")
+
 	for _, md := range storage.Files {
 		if md.From == from {
 			rem := md.Expire.Sub(now)
