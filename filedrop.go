@@ -19,7 +19,6 @@ var RootCmd = &cobra.Command{
 }
 
 const (
-	DefaultRoot   = "./downloads"
 	DefaultPort   = "8080"
 	DefaultListen = "127.0.0.1"
 )
@@ -49,9 +48,6 @@ func main() {
 	if url == "" {
 		url = fmt.Sprintf("http://%s:%s", listen, port)
 	}
-
-	if root == "" {
-		root = DefaultRoot
 	}
 
 	flag.StringVarP(&root, "root", "r", root, "Storage directory")

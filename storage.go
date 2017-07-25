@@ -53,7 +53,7 @@ type Storage struct {
 }
 
 func NewStorage(root string) *Storage {
-	s := &Storage{Root: root}
+	s := &Storage{Root: path.Join(root, "downloads")}
 
 	s.Files = make(map[string]*MetaData)
 
