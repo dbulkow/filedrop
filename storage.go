@@ -14,7 +14,16 @@ import (
 	"time"
 )
 
+type StorageType string
+
+const (
+	StorageFile     StorageType = "file"
+	StorageText     StorageType = "text"
+	StorageGraphics StorageType = "image"
+)
+
 type MetaData struct {
+	Type     StorageType
 	From     string // IP address of uploader
 	Filename string
 	Hash     string

@@ -101,6 +101,7 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 		}
 
 		md := &MetaData{
+			Type:     StorageFile,
 			From:     from,
 			Filename: handler.Filename,
 			Created:  time.Now(),
