@@ -31,6 +31,10 @@ var (
 		Name: "filedrop_serve_fav_icon",
 		Help: "Total times favicon.ico served",
 	})
+	activeDirs = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "filedrop_active_dirs",
+		Help: "Number of directories being served",
+	})
 	activeFiles = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "filedrop_active_files",
 		Help: "Number of files being served",
@@ -44,6 +48,7 @@ func init() {
 	prometheus.MustRegister(downloadBytes)
 	prometheus.MustRegister(serveFrontPage)
 	prometheus.MustRegister(serveFavIcon)
+	prometheus.MustRegister(activeDirs)
 	prometheus.MustRegister(activeFiles)
 }
 

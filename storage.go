@@ -90,7 +90,7 @@ func NewStorage(root string) *Storage {
 
 		hash := path.Base(path.Dir(pathname))
 		s.Dirs[hash] = md
-		activeFiles.Inc()
+		activeDirs.Inc()
 
 		return nil
 	}
@@ -135,7 +135,8 @@ func (s *Storage) WriteMeta(md *MetaData) error {
 	}
 
 	s.Dirs[md.Hash] = md
-	activeFiles.Inc()
+	activeDirs.Inc()
+	activeFiles.Add(float64(len(md.Files)))
 
 	return nil
 }
@@ -155,7 +156,8 @@ func (s *Storage) Expire() {
 					log.Printf("remove %s: %v", hashdir, err)
 				}
 				delete(s.Dirs, md.Hash)
-				activeFiles.Dec()
+				activeDirs.Dec()
+				activeFiles.Sub(float64(len(md.Files)))
 			}
 		}
 
