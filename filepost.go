@@ -24,27 +24,16 @@ func filepost(w http.ResponseWriter, r *http.Request) {
 
 	r.ParseMultipartForm(32 << 20)
 
-	duration, err := strconv.Atoi(r.FormValue("duration"))
+	onread := r.FormValue("onread") == "true"
+
+	d, err := strconv.Atoi(r.FormValue("duration"))
 	if err != nil {
 		log.Printf("duration parse: %s", err)
 		w.Header().Set("Content-Type", "text/html")
 		return
 	}
 
-	unit := r.FormValue("unit")
-	switch unit {
-	case "hour":
-	case "day":
-		duration *= 24
-	case "week":
-		duration *= 24 * 7
-	default:
-		log.Printf("unknown unit value: %s", unit)
-		w.Header().Set("Content-Type", "text/html")
-		return
-	}
-
-	d, err := time.ParseDuration(fmt.Sprintf("%dh", duration))
+	duration, err := time.ParseDuration(fmt.Sprintf("%dm", d))
 	if err != nil {
 		log.Printf("parse duration: %v", err)
 		w.Header().Set("Content-Type", "text/html")
@@ -78,7 +67,8 @@ func filepost(w http.ResponseWriter, r *http.Request) {
 		From:    from,
 		Files:   files,
 		Created: time.Now(),
-		Expire:  time.Now().Add(d),
+		Expire:  time.Now().Add(duration),
+		OnRead:  onread,
 	}
 
 	if err := storage.Mkdir(md); err != nil {

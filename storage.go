@@ -23,9 +23,10 @@ const (
 )
 
 type File struct {
-	Name string `json:"filename"`
-	Type string `json:"ctype"`
-	Size int64  `json:"size"`
+	Name       string `json:"filename"`
+	Type       string `json:"ctype"`
+	Size       int64  `json:"size"`
+	downloaded bool
 }
 
 type MetaData struct {
@@ -35,6 +36,7 @@ type MetaData struct {
 	Hash    string      `json:"hash"`
 	Created time.Time   `json:"created"`
 	Expire  time.Time   `json:"expire"`
+	OnRead  bool        `json:"onread"` // delete after first read/download
 	hashdir string
 }
 
@@ -141,6 +143,17 @@ func (s *Storage) WriteMeta(md *MetaData) error {
 	return nil
 }
 
+func (s *Storage) expire(md *MetaData) {
+	log.Printf("expire %s\n", md.Hash)
+	hashdir := path.Join(s.Root, md.Hash)
+	if err := os.RemoveAll(hashdir); err != nil {
+		log.Printf("remove %s: %v", hashdir, err)
+	}
+	delete(s.Dirs, md.Hash)
+	activeDirs.Dec()
+	activeFiles.Sub(float64(len(md.Files)))
+}
+
 func (s *Storage) Expire() {
 	for {
 		time.Sleep(time.Minute)
@@ -150,14 +163,19 @@ func (s *Storage) Expire() {
 		now := time.Now()
 		for _, md := range s.Dirs {
 			if now.After(md.Expire) {
-				log.Printf("expire %s\n", md.Hash)
-				hashdir := path.Join(s.Root, md.Hash)
-				if err := os.RemoveAll(hashdir); err != nil {
-					log.Printf("remove %s: %v", hashdir, err)
+				s.expire(md)
+			}
+
+			if md.OnRead {
+				count := 0
+				for _, f := range md.Files {
+					if f.downloaded {
+						count++
+					}
 				}
-				delete(s.Dirs, md.Hash)
-				activeDirs.Dec()
-				activeFiles.Sub(float64(len(md.Files)))
+				if len(md.Files) == count {
+					s.expire(md)
+				}
 			}
 		}
 

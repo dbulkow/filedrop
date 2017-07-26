@@ -8,38 +8,21 @@
     <form enctype="multipart/form-data" action="/postfile" method="post">
       <input type="file" name="filenames" multiple></br>
       Delete after:<br>
-      <input id="duration" type="number" name="duration" min="1" max="24" value="1">
-      <select id="unit" name="unit">
-	<option value="hour">hours</option>
-	<option value="day">days</option>
-	<option value="week">weeks</option>
+      <select id="duration" name="duration">
+	<option value="10">10 minutes</option>
+	<option value="60">1 hour</option>
+	<option value="1440">1 day</option>
+	<option value="10080">1 week</option>
+	<option value="20160">2 weeks</option>
+	<option value="40320">1 month</option>
       </select><br>
+      <input id="onread" type="checkbox" name="onread" value="true">
+      <label for="onread">Delete on first download</label><br>
       <input type="submit" value="Submit">
     </form>
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript">
-
-$('select#unit').on("change", function () {
-    var duration = $('input#duration')
-    var unit = $(this).find("option:selected").val();
-
-    console.log(unit, duration.attr('max'));
-
-    switch (unit) {
-    case "hour":
-	duration.attr('max', '24');
-	break;
-    case "day":
-	duration.attr("max", '7');
-	break;
-    case "week":
-	duration.attr('max', '4');
-	break;
-    }
-
-    console.log(duration.attr('max'));
-});
 
     </script>
   </body>

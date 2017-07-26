@@ -34,13 +34,16 @@ func fileget(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var ctype string
-		for _, f := range md.Files {
-			if f.Name == parts[1] {
-				ctype = f.Type
+		var file File
+		var fnum int
+		for fnum, file = range md.Files {
+			if file.Name == parts[1] {
+				ctype = file.Type
+				break
 			}
 		}
 		if ctype == "" {
-			log.Printf("file \"%s\" not found %s", parts[1], r.URL.Path)
+			log.Printf("file \"%s\" not found %s", file.Name, r.URL.Path)
 			w.Header().Set("Content-Type", "text/html")
 			return
 		}
@@ -48,9 +51,12 @@ func fileget(w http.ResponseWriter, r *http.Request) {
 		downloads.Inc()
 		writer := NewResponseWriterCounter(w)
 
-		writer.Header().Set("Content-Disposition", fmt.Sprintf("filename=\"%s\"", parts[1]))
+		writer.Header().Set("Content-Disposition", fmt.Sprintf("filename=\"%s\"", file.Name))
 		writer.Header().Set("Content-Type", ctype)
-		http.ServeFile(writer, r, path.Join(storage.Root, parts[0], parts[1]))
+		http.ServeFile(writer, r, path.Join(storage.Root, md.Hash, file.Name))
+
+		md.Files[fnum].downloaded = true
+
 		return
 	}
 
