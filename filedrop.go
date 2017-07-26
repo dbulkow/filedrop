@@ -25,7 +25,7 @@ const (
 
 var (
 	storage *Storage
-	url     string
+	rootURL string
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 		port   = os.Getenv("FILEDROP_PORT")
 	)
 
-	url = os.Getenv("FILEDROP_SERVER_URL")
+	rootURL = os.Getenv("FILEDROP_SERVER_URL")
 
 	if listen == "" {
 		listen = DefaultListen
@@ -46,14 +46,14 @@ func main() {
 	}
 
 	hostname, _ := os.Hostname()
-	if url == "" {
-		url = fmt.Sprintf("http://%s:%s", hostname, port)
+	if rootURL == "" {
+		rootURL = fmt.Sprintf("http://%s:%s", hostname, port)
 	}
 
 	flag.StringVarP(&root, "root", "r", root, "Storage directory")
 	flag.StringVarP(&listen, "listen", "l", listen, "Listen address")
 	flag.StringVarP(&port, "port", "p", port, "Port number")
-	flag.StringVarP(&url, "url", "u", url, "Filedrop server URL to advertise")
+	flag.StringVarP(&rootURL, "url", "u", rootURL, "Filedrop server URL to advertise")
 
 	flag.Parse()
 
@@ -75,7 +75,7 @@ func main() {
 		TLSNextProto:   nil,
 	}
 
-	log.Printf("Advertising url \"%s\"", url)
+	log.Printf("Advertising url \"%s\"", rootURL)
 	log.Printf("Listening on http://%s", srv.Addr)
 
 	log.Fatal(srv.ListenAndServe())

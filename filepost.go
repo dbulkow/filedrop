@@ -130,7 +130,7 @@ func filepost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shareURL := fmt.Sprintf("%s/retrieve/%s", url, md.Hash)
+	shareURL := fmt.Sprintf("%s/retrieve/%s", rootURL, md.Hash)
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "no-cache")
