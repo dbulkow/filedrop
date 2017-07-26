@@ -61,7 +61,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.Handle("/", prometheus.InstrumentHandler("server", http.StripPrefix("/", makeGzipHandler(frontPage))))
-	mux.Handle("/postfile", prometheus.InstrumentHandler("postfile", http.StripPrefix("/postfile", makeGzipHandler(postfile))))
+	mux.Handle("/postfile", prometheus.InstrumentHandler("postfile", http.StripPrefix("/postfile", makeGzipHandler(filepost))))
+	mux.Handle("/retrieve/", prometheus.InstrumentHandler("retrieve", http.StripPrefix("/retrieve/", makeGzipHandler(fileget))))
 	mux.Handle("/status", prometheus.InstrumentHandler("status", makeGzipHandler(status)))
 	mux.Handle("/metrics", prometheus.InstrumentHandler("metrics", metrics()))
 

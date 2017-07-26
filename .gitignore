@@ -3,4 +3,5 @@ tls
 *~
 # generated files
 frontpage_html.go
-replypage_html.go
+fileget_html.go
+filepost_html.go

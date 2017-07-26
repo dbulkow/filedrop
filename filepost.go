@@ -11,7 +11,9 @@ import (
 	"time"
 )
 
-func postfile(w http.ResponseWriter, r *http.Request) {
+//go:generate go run scripts/mkpage.go filepost.html
+
+func filepost(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -42,14 +44,6 @@ func postfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	in, handler, err := r.FormFile("filename")
-	if err != nil {
-		log.Printf("file upload: %v", err)
-		w.Header().Set("Content-Type", "text/html")
-		return
-	}
-	defer in.Close()
-
 	d, err := time.ParseDuration(fmt.Sprintf("%dh", duration))
 	if err != nil {
 		log.Printf("parse duration: %v", err)
@@ -64,52 +58,84 @@ func postfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	md := &MetaData{
-		Type:     StorageFile,
-		From:     from,
-		Filename: handler.Filename,
-		Created:  time.Now(),
-		Expire:   time.Now().Add(d),
-	}
-
-	out, err := storage.Create(md)
-	if err != nil {
-		log.Printf("storage create: %v", err)
-		w.Header().Set("Content-Type", "text/html")
-		return
-	}
-	defer func() {
-		if err := out.Close(); err != nil {
-			log.Printf("close: %v", err)
+	files := make([]File, 0)
+	for _, fh := range r.MultipartForm.File["filenames"] {
+		f := File{
+			Name: fh.Filename,
+			Type: fh.Header["Content-Type"][0],
 		}
-	}()
+		files = append(files, f)
+	}
 
-	nbytes, err := io.Copy(out, in)
-	if err != nil {
-		log.Printf("copy: %v", err)
+	md := &MetaData{
+		Type:    StorageFile,
+		From:    from,
+		Files:   files,
+		Created: time.Now(),
+		Expire:  time.Now().Add(d),
+	}
+
+	if err := storage.Mkdir(md); err != nil {
+		log.Printf("mkdir: %v", err)
 		w.Header().Set("Content-Type", "text/html")
 		return
 	}
 
-	uploads.Inc()
-	uploadBytes.Add(float64(nbytes))
+	for i, fh := range r.MultipartForm.File["filenames"] {
+		in, err := fh.Open()
+		if err != nil {
+			log.Printf("file upload: %v", err)
+			w.Header().Set("Content-Type", "text/html")
+			return
+		}
+		defer in.Close()
 
-	log.Printf("uploaded %d bytes for %s as %s", nbytes, md.Filename, md.Hash)
+		out, err := storage.Create(md, fh.Filename)
+		if err != nil {
+			log.Printf("storage create: %v", err)
+			w.Header().Set("Content-Type", "text/html")
+			return
+		}
+		defer func() {
+			if err := out.Close(); err != nil {
+				log.Printf("close: %v", err)
+			}
+		}()
 
-	t, err := template.New("reply").Parse(replypage)
+		nbytes, err := io.Copy(out, in)
+		if err != nil {
+			log.Printf("copy: %v", err)
+			w.Header().Set("Content-Type", "text/html")
+			return
+		}
+
+		uploads.Inc()
+		uploadBytes.Add(float64(nbytes))
+
+		log.Printf("uploaded %d bytes for %s as %s", nbytes, fh.Filename, md.Hash)
+
+		md.Files[i].Size = nbytes
+	}
+
+	if err := storage.WriteMeta(md); err != nil {
+		log.Printf("writemeta: %v", err)
+		w.Header().Set("Content-Type", "text/html")
+		return
+	}
+
+	t, err := template.New("reply").Parse(filepost_html)
 	if err != nil {
 		log.Printf("template parse: %v", err)
 		w.Header().Set("Content-Type", "text/html")
 		return
 	}
 
-	shareURL := fmt.Sprintf("%s/%s", url, md.Hash)
+	shareURL := fmt.Sprintf("%s/retrieve/%s", url, md.Hash)
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "no-cache")
 	if err := t.Execute(w, shareURL); err != nil {
 		log.Printf("template exec: %v", err)
-		w.Header().Set("Content-Type", "text/html")
 		return
 	}
 }

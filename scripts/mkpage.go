@@ -56,7 +56,7 @@ func main() {
 
 	fmt.Fprintf(out, "package main\n\n")
 	fmt.Fprintf(out, "const %s_etag = \"%s\"\n\n", parts[0], filehash(htmlfile))
-	fmt.Fprintf(out, "const %s = `", parts[0])
+	fmt.Fprintf(out, "const %s_html = `", parts[0])
 
 	if _, err := io.Copy(out, in); err != nil {
 		fmt.Fprintf(os.Stderr, "io copy: %v\n", err)

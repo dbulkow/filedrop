@@ -25,10 +25,12 @@ func status(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain")
 
-	for _, md := range storage.Files {
+	for _, md := range storage.Dirs {
 		if md.From == from {
 			rem := md.Expire.Sub(now)
-			fmt.Fprintf(w, "%s %v %s\n", md.Hash, rem-(rem%time.Minute), md.Filename)
+			for _, f := range md.Files {
+				fmt.Fprintf(w, "%s %v %s\n", md.Hash, rem-(rem%time.Minute), f.Name)
+			}
 		}
 	}
 }

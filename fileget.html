@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge;">
+    <title id='title'>File Drop</title>
+  </head>
+  <body>
+    <table>
+      <tr>
+	<th>filename</th>
+	<th>type</th>
+	<th>size</th>
+      </tr>
+      {{range .}}<tr>
+	<td><a href="{{.URL}}">{{.Filename}}</a></td>
+	<td>{{.Type}}</td>
+	<td>{{.Size}}</td>
+      </tr>{{end}}
+    </table>
+  </body>
+</html>

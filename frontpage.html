@@ -5,8 +5,8 @@
     <title id='title'>File Drop</title>
   </head>
   <body>
-    <form enctype="multipart/form-data" action="/" method="post">
-      <input type="file" name="filename"></br>
+    <form enctype="multipart/form-data" action="/postfile" method="post">
+      <input type="file" name="filenames" multiple></br>
       Delete after:<br>
       <input id="duration" type="number" name="duration" min="1" max="24" value="1">
       <select id="unit" name="unit">

@@ -22,22 +22,34 @@ const (
 	StorageGraphics StorageType = "image"
 )
 
+type File struct {
+	Name string `json:"filename"`
+	Type string `json:"ctype"`
+	Size int64  `json:"size"`
+}
+
 type MetaData struct {
-	Type     StorageType `json:"type"`
-	From     string      `json:"from"` // IP address of uploader
-	Filename string      `json:"filename"`
-	Hash     string      `json:"hash"`
-	Created  time.Time   `json:"created"`
-	Expire   time.Time   `json:"expire"`
+	Type    StorageType `json:"type"`
+	From    string      `json:"from"` // IP address of uploader
+	Files   []File      `json:"files"`
+	Hash    string      `json:"hash"`
+	Created time.Time   `json:"created"`
+	Expire  time.Time   `json:"expire"`
+	hashdir string
 }
 
 func (m *MetaData) MkHash() {
-	data := []byte(fmt.Sprintf("%s %s %s", m.Filename, m.Created, m.Expire))
+	names := make([]string, 0)
+	for _, f := range m.Files {
+		names = append(names, f.Name)
+	}
+
+	data := []byte(fmt.Sprintf("%s %q %s", names, m.Created, m.Expire))
 	sum := sha256.Sum256(data)
 	m.Hash = fmt.Sprintf("%x", sum)
 }
 
-func (m *MetaData) Bytes() []byte {
+func (m *MetaData) Marshal() []byte {
 	b, err := json.MarshalIndent(m, "", "    ")
 	if err != nil {
 		log.Fatalf("marshal: %v", err)
@@ -47,15 +59,15 @@ func (m *MetaData) Bytes() []byte {
 }
 
 type Storage struct {
-	Root  string
-	Files map[string]*MetaData
+	Root string
+	Dirs map[string]*MetaData
 	sync.Mutex
 }
 
 func NewStorage(root string) *Storage {
 	s := &Storage{Root: path.Join(root, "downloads")}
 
-	s.Files = make(map[string]*MetaData)
+	s.Dirs = make(map[string]*MetaData)
 
 	visit := func(pathname string, fi os.FileInfo, err error) error {
 		if path.Base(pathname) != "metadata" {
@@ -77,7 +89,7 @@ func NewStorage(root string) *Storage {
 		}
 
 		hash := path.Base(path.Dir(pathname))
-		s.Files[hash] = md
+		s.Dirs[hash] = md
 		activeFiles.Inc()
 
 		return nil
@@ -97,25 +109,35 @@ func NewStorage(root string) *Storage {
                                                 /metadata
 */
 
-func (s *Storage) Create(md *MetaData) (io.WriteCloser, error) {
+func (s *Storage) Mkdir(md *MetaData) error {
 	md.MkHash()
+	md.hashdir = path.Join(s.Root, md.Hash)
 
+	err := os.MkdirAll(md.hashdir, 0755)
+	if err != nil {
+		return fmt.Errorf("mkdir: %v", err)
+	}
+
+	return nil
+}
+
+func (s *Storage) Create(md *MetaData, filename string) (io.WriteCloser, error) {
 	hashdir := path.Join(s.Root, md.Hash)
+	return os.Create(path.Join(hashdir, filename))
+}
 
-	err := os.MkdirAll(hashdir, 0755)
+func (s *Storage) WriteMeta(md *MetaData) error {
+	mdfile := path.Join(md.hashdir, "metadata")
+
+	err := ioutil.WriteFile(mdfile, md.Marshal(), 0644)
 	if err != nil {
-		return nil, fmt.Errorf("mkdir: %v", err)
+		return fmt.Errorf("create metadata %s: %v", md.hashdir, err)
 	}
 
-	err = ioutil.WriteFile(path.Join(hashdir, "metadata"), md.Bytes(), 0644)
-	if err != nil {
-		return nil, fmt.Errorf("create metadata %s: %v", hashdir, err)
-	}
-
-	s.Files[md.Hash] = md
+	s.Dirs[md.Hash] = md
 	activeFiles.Inc()
 
-	return os.Create(path.Join(hashdir, md.Filename))
+	return nil
 }
 
 func (s *Storage) Expire() {
@@ -125,14 +147,14 @@ func (s *Storage) Expire() {
 		s.Lock()
 
 		now := time.Now()
-		for _, md := range s.Files {
+		for _, md := range s.Dirs {
 			if now.After(md.Expire) {
 				log.Printf("expire %s\n", md.Hash)
 				hashdir := path.Join(s.Root, md.Hash)
 				if err := os.RemoveAll(hashdir); err != nil {
 					log.Printf("remove %s: %v", hashdir, err)
 				}
-				delete(s.Files, md.Hash)
+				delete(s.Dirs, md.Hash)
 				activeFiles.Dec()
 			}
 		}
