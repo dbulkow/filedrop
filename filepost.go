@@ -67,6 +67,12 @@ func filepost(w http.ResponseWriter, r *http.Request) {
 		files = append(files, f)
 	}
 
+	if len(files) == 0 {
+		log.Println("no files were specified")
+		http.Redirect(w, r, "", http.StatusSeeOther)
+		return
+	}
+
 	md := &MetaData{
 		Type:    StorageFile,
 		From:    from,
