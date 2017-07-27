@@ -3,26 +3,82 @@
   <head>
     <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge;">
     <title id='title'>File Drop</title>
+    <style>
+html {
+    font-family: sans-serif;
+}
+div#form {
+    padding: 8px 60px 8px 60px;
+}
+div#buttonbar {
+    padding: 8px 0px 8px 0px;
+}
+div#files, div#expiration, div#onread, div#submit {
+    border: 1px solid #28343F;
+    padding: 6px 5px;
+    display: inline;
+    margin: 6px 4px;
+}
+div#files {
+    margin-left: 0;
+}
+div#submit {
+    border: 0;
+}
+    </style>
   </head>
   <body>
-    <form enctype="multipart/form-data" action="/postfile" method="post">
-      <input type="file" name="filenames" multiple></br>
-      Delete after:<br>
-      <select id="duration" name="duration">
-	<option value="10">10 minutes</option>
-	<option value="60">1 hour</option>
-	<option value="1440">1 day</option>
-	<option value="10080">1 week</option>
-	<option value="20160">2 weeks</option>
-	<option value="40320">1 month</option>
-      </select><br>
-      <input id="onread" type="checkbox" name="onread" value="true">
-      <label for="onread">Delete on first download</label><br>
-      <input type="submit" value="Submit">
-    </form>
+    <h1>File Drop</h1>
+    <div id="form">
+      <div id="buttonbar">
+	<form enctype="multipart/form-data" action="/postfile" method="post">
+	  <div id="files">
+	    <input type="file" id="files" name="filenames" multiple>
+	  </div>
+	  <div id="expiration">
+	    Delete after:
+	    <select id="duration" name="duration">
+	      <option value="10">10 minutes</option>
+	      <option value="60">1 hour</option>
+	      <option value="480">8 hours</option>
+	      <option value="1440">1 day</option>
+	      <option value="10080">1 week</option>
+	      <option value="20160">2 weeks</option>
+	      <option value="40320">1 month</option>
+	    </select>
+	  </div>
+	  <div id="onread">
+	    <input id="onread" type="checkbox" name="onread" value="true">
+	    <label for="onread">Delete on first download</label>
+	  </div>
+	  <div id="submit">
+	    <input type="submit" value="Upload">
+	  </div>
+	</form>
+      </div>
+      <div id="selectedFiles"></div>
+    </div>
 
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
     <script type="text/javascript">
+
+var selFiles = $('#selectedFiles');
+
+$('#files').change(function (e) {
+    if (!e.target.files) return;
+
+    selFiles.html("");
+    selFiles.css("border", "");
+
+    var files = e.target.files;
+    for (var i = 0; i < files.length; i++) {
+	var f = files[i];
+
+	selFiles.append(f.name+"<br/>");
+    }
+
+    selFiles.css("border", "1px solid #28343F");
+});
 
     </script>
   </body>
