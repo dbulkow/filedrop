@@ -3,8 +3,48 @@
   <head>
     <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge;">
     <title id='title'>File Drop</title>
+    <style>
+body {
+    font-family: "sans-serif";
+}
+div#page {
+    padding: 6px;
+}
+div#retrieveURL {
+    border: 1px solid #28343F;
+}
+div#notice, div#retrieveURL, div#button {
+    padding: 6px;
+}
+    </style>
   </head>
   <body>
-    <p>Mail the following url to those you wish you share this file with:<br><br>{{.}}
+    <h1>File Drop</h1>
+    <div id="page">
+      <div id="notice">
+	Mail the following url to your recipients:
+      </div>
+      <div id="retrieveURL">{{.}}</div>
+    </div>
+    <div id="button">
+      <button id="copyButton">Copy to Clipboard</button>
+    </div>
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script type="text/javascript">
+var copyButton = $('button#copyButton');
+var retrieveURL = $('div#retrieveURL');
+
+copyButton.click(function (e) {
+    copyToClipboard(e);
+});
+
+function copyToClipboard(e) {
+    var temp = $('<input>');
+    $('body').append(temp);
+    temp.val(retrieveURL.text()).select();
+    document.execCommand("copy");
+    temp.remove();
+}
+    </script>
   </body>
 </html>
