@@ -29,7 +29,7 @@ func status(w http.ResponseWriter, r *http.Request) {
 		if md.From == from {
 			rem := md.Expire.Sub(now)
 			for _, f := range md.Files {
-				fmt.Fprintf(w, "%s %v %s\n", md.Hash, rem-(rem%time.Minute), f.Name)
+				fmt.Fprintf(w, "%s %v %s %t\n", md.Hash, rem-(rem%time.Minute), f.Name, f.downloaded)
 			}
 		}
 	}
