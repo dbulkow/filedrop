@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"path"
 	"strings"
+
+	human "github.com/dustin/go-humanize"
 )
 
 //go:generate go run scripts/mkpage.go fileget.html
@@ -64,20 +66,29 @@ func fileget(w http.ResponseWriter, r *http.Request) {
 		URL      string
 		Filename string
 		Type     string
-		Size     int64
+		Size     string
 	}
 
-	files := make([]*Files, 0)
+	type Retrieve struct {
+		Expire string
+		Files  []*Files
+	}
+
+	page := Retrieve{}
+
 	md, ok := storage.Dirs[r.URL.Path]
 	if ok {
+		page.Expire = human.Time(md.Expire)
+		page.Files = make([]*Files, 0)
+
 		for _, file := range md.Files {
 			f := &Files{
 				URL:      r.URL.Path + "/" + file.Name,
 				Filename: file.Name,
 				Type:     file.Type,
-				Size:     file.Size,
+				Size:     human.Bytes(uint64(file.Size)),
 			}
-			files = append(files, f)
+			page.Files = append(page.Files, f)
 		}
 	}
 
@@ -91,7 +102,7 @@ func fileget(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Etag", fmt.Sprintf("\"%s\"", fileget_etag))
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("Cache-Control", "no-cache")
-	if err := t.Execute(w, files); err != nil {
+	if err := t.Execute(w, page); err != nil {
 		log.Printf("template exec: %v", err)
 		return
 	}

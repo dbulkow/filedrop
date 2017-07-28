@@ -3,18 +3,35 @@
   <head>
     <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge;">
     <title id='title'>File Drop</title>
+    <style>
+body {
+    font-family: "sans-serif";
+}
+td#filename {
+    font-size: 110%;
+}
+td#size {
+    text-align: right;
+}
+td {
+    padding: 3px 10px;
+}
+#expire {
+    border: 1px solid #28343F;
+    padding: 6px 6px 6px 6px;
+    display: inline-block;
+}
+    </style>
   </head>
   <body>
+    <h1>File Drop</h1>
+    <h2>Downloads</h2>
+    <p id="expire">Files expire {{.Expire}}</p>
     <table>
-      <tr>
-	<th>filename</th>
-	<th>type</th>
-	<th>size</th>
-      </tr>
-      {{range .}}<tr>
-	<td><a href="{{.URL}}">{{.Filename}}</a></td>
+      {{range .Files}}<tr>
 	<td>{{.Type}}</td>
-	<td>{{.Size}}</td>
+	<td id="size">{{.Size}}</td>
+	<td id="filename"><a href="{{.URL}}">{{.Filename}}</a></td>
       </tr>{{end}}
     </table>
   </body>
