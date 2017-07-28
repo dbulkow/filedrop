@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" http-equiv="X-UA-Compatible" content="IE=edge;">
+    <title id='title'>File Drop</title>
+    <style>
+body {
+    font-family: "sans-serif";
+}
+td#expire {
+    padding-right: 5px;
+    font-size: 110%;
+}
+td#size {
+    text-align: right;
+    padding-right: 5px;
+}
+td#filename {
+    font-size: 110%;
+}
+td#hash {
+    font-family: "monospace";
+}
+    </style>
+  </head>
+  <body>
+    <h1>File Drop</h1>
+    <h2>Uploads</h2>
+    <table>
+      {{range .Dirs}}<tr>
+	<td id="hash" colspan="2">{{.Hash}}</td>
+	<td id="expire">{{.Expire}}</td>
+      </tr>
+      {{range .Files}}<tr>
+	<td id="size">{{.Size}}</td>
+	<td id="filename">{{.Filename}}</td>
+        <td id="downloaded">{{.Downloaded}}</td>
+      </tr>{{end}}{{end}}
+    </table>
+  </body>
+</html>
