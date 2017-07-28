@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"sort"
 
 	human "github.com/dustin/go-humanize"
 )
@@ -25,6 +26,12 @@ func status(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hashes := make([]string, 0)
+	for _, md := range storage.Dirs {
+		hashes = append(hashes, md.Hash)
+	}
+	sort.Strings(hashes)
+
 	type Files struct {
 		Filename   string
 		Size       string
@@ -42,8 +49,9 @@ func status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := Status{Dirs: make([]*Dir, 0)}
+	for _, h := range hashes {
+		md := storage.Dirs[h]
 
-	for _, md := range storage.Dirs {
 		if md.From == from {
 			dir := &Dir{
 				Expire: human.Time(md.Expire),
