@@ -9,6 +9,8 @@ go build
 ```
 # Deploy in docker
 The HTML files are built into the binary for easier deployment. For the golang build image this means we need to generate them before building the filedrop image.
+
+If you want a favicon, copy it to favicon.png before building the image.
 ```
 go generate
 docker build -t filedrop .
