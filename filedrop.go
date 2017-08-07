@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -23,10 +22,7 @@ const (
 	DefaultListen = "127.0.0.1"
 )
 
-var (
-	storage *Storage
-	rootURL string
-)
+var storage *Storage
 
 func main() {
 	var (
@@ -34,8 +30,6 @@ func main() {
 		listen = os.Getenv("FILEDROP_ADDRESS")
 		port   = os.Getenv("FILEDROP_PORT")
 	)
-
-	rootURL = os.Getenv("FILEDROP_SERVER_URL")
 
 	if listen == "" {
 		listen = DefaultListen
@@ -45,15 +39,9 @@ func main() {
 		port = DefaultPort
 	}
 
-	hostname, _ := os.Hostname()
-	if rootURL == "" {
-		rootURL = fmt.Sprintf("http://%s:%s", hostname, port)
-	}
-
 	flag.StringVarP(&root, "root", "r", root, "Storage directory")
 	flag.StringVarP(&listen, "listen", "l", listen, "Listen address")
 	flag.StringVarP(&port, "port", "p", port, "Port number")
-	flag.StringVarP(&rootURL, "url", "u", rootURL, "Filedrop server URL to advertise")
 
 	flag.Parse()
 
@@ -75,7 +63,6 @@ func main() {
 		TLSNextProto:   nil,
 	}
 
-	log.Printf("Advertising url \"%s\"", rootURL)
 	log.Printf("Listening on http://%s", srv.Addr)
 
 	log.Fatal(srv.ListenAndServe())
