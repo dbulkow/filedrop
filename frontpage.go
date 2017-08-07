@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 )
 
@@ -15,13 +14,13 @@ func frontPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "favicon.ico" {
-		log.Printf("serving favicon to %s", r.RemoteAddr)
+		// log.Printf("serving favicon to %s", r.RemoteAddr)
 		serveFavIcon.Inc()
 		http.ServeFile(w, r, "favicon.png")
 		return
 	}
 
-	log.Printf("serving form to %s", r.RemoteAddr)
+	// log.Printf("serving form to %s", r.RemoteAddr)
 
 	serveFrontPage.Inc()
 
