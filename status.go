@@ -13,6 +13,12 @@ import (
 
 //go:generate go run scripts/mkpage.go status.html
 
+type byTime []*MetaData
+
+func (t byTime) Len() int           { return len(t) }
+func (t byTime) Less(i, j int) bool { return t[i].Expire.Before(t[j].Expire) }
+func (t byTime) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
+
 func status(w http.ResponseWriter, r *http.Request) {
 	storage.Lock()
 	defer storage.Unlock()
@@ -26,11 +32,11 @@ func status(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hashes := make([]string, 0)
+	sorted := make(byTime, 0)
 	for _, md := range storage.Dirs {
-		hashes = append(hashes, md.Hash)
+		sorted = append(sorted, md)
 	}
-	sort.Strings(hashes)
+	sort.Sort(sorted)
 
 	type Files struct {
 		Filename   string
@@ -49,9 +55,7 @@ func status(w http.ResponseWriter, r *http.Request) {
 	}
 
 	status := Status{Dirs: make([]*Dir, 0)}
-	for _, h := range hashes {
-		md := storage.Dirs[h]
-
+	for _, md := range sorted {
 		if md.From == from {
 			dir := &Dir{
 				Expire: human.Time(md.Expire),
