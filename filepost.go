@@ -108,7 +108,7 @@ func filepost(w http.ResponseWriter, r *http.Request) {
 		uploads.Inc()
 		uploadBytes.Add(float64(nbytes))
 
-		log.Printf("uploaded %d bytes for %s as %s", nbytes, fh.Filename, md.Hash)
+		log.Printf("uploaded %d bytes for %s as %s expires %v", nbytes, fh.Filename, md.Hash, md.Expire)
 
 		md.Files[i].Size = nbytes
 	}
