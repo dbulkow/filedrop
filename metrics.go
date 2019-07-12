@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
@@ -53,5 +54,5 @@ func init() {
 }
 
 func metrics() http.Handler {
-	return prometheus.Handler()
+	return promhttp.Handler()
 }
